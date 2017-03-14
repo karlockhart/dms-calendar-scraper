@@ -1,13 +1,18 @@
 package main
 
-import "github.com/karlockhart/dms-calendar-scraper/pkg/dms"
-import "log"
+import (
+	"fmt"
+	"log"
+
+	"github.com/karlockhart/dms-calendar-scraper/pkg/dms"
+)
 
 func main() {
-	_, err := dms.NewCalendar()
+	c, err := dms.NewCalendar()
 
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(c.String())
 
 }

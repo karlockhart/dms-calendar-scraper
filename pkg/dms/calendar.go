@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"fmt"
+	"encoding/json"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -20,6 +20,24 @@ type Calendar struct {
 	Events []Event
 }
 
+func clean(s string) string {
+	return strings.TrimSpace(strings.Replace(strings.Join(strings.Fields(s), " "), "\n", "", -1))
+}
+
+func remove(s string, cut string) string {
+	return strings.Replace(s, cut, "", -1)
+}
+
+func (c *Calendar) String() string {
+	cs, err := json.Marshal(c)
+
+	if err != nil {
+		panic("Could not convert Calendar to string.")
+	}
+
+	return string(cs)
+}
+
 var calendarURL = "http://calendar.dallasmakerspace.org"
 
 func NewCalendar() (*Calendar, error) {
@@ -29,24 +47,26 @@ func NewCalendar() (*Calendar, error) {
 		log.Fatal(err)
 	}
 
+	c := new(Calendar)
+
 	doc.Find(".event-panel").Each(func(i int, s *goquery.Selection) {
 		event := new(Event)
-		time := strings.TrimSpace(s.Find(".panel-heading").Find(".time").Text())
-		event.Title = strings.TrimSpace(strings.Replace(s.Find(".panel-heading").Text(), time, "", -1))
+		time := clean(s.Find(".panel-heading").Find(".time").Text())
+		event.Title = clean(remove(s.Find(".panel-heading").Text(), time))
 		s.Find(".table-condensed tr").Each(func(i int, tr *goquery.Selection) {
 			label := tr.Find("td:nth-child(1)").Text()
 			switch label {
 			case "Where":
-				event.Where = strings.TrimSpace(tr.Find("td:nth-child(2)").Text())
+				event.Where = clean(tr.Find("td:nth-child(2)").Text())
 			case "When":
-				event.When = strings.TrimSpace(tr.Find("td:nth-child(2)").Text())
+				event.When = clean(tr.Find("td:nth-child(2)").Text())
 			case "Details":
-				event.Details = strings.TrimSpace(tr.Find("td:nth-child(2)").Text())
+				event.Details = clean(tr.Find("td:nth-child(2)").Text())
 			}
 		})
-		fmt.Println(event.Title, event.When, event.Where, event.Details)
+		c.Events = append(c.Events, *event)
 
 	})
 
-	return nil, err
+	return c, err
 }
