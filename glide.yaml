@@ -1,0 +1,4 @@
+package: github.com/karlockhart/dms-calendar-scraper
+import:
+- package: github.com/PuerkitoBio/goquery
+  version: ^1.1.0
