@@ -1,3 +1,7 @@
+/*
+Package dms implements an a simple library for representing the dallasmakerspace.org event calendar.
+*/
+
 package dms
 
 import (
@@ -9,13 +13,16 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+//Event represents an event on the dallasmakerspace.org calendar.
 type Event struct {
-	Title   string
-	When    string
-	Where   string
-	Details string
+	Title   string `json:"id"`
+	Start   string `json:"when"`
+	End     string `json:"until"`
+	Where   string `json:"where"`
+	Details string `json:"details"`
 }
 
+// Calendar represents the dallasmakerspace.org calendar.
 type Calendar struct {
 	Events []Event
 }
@@ -38,8 +45,15 @@ func (c *Calendar) String() string {
 	return string(cs)
 }
 
-var calendarURL = "http://calendar.dallasmakerspace.org"
+func parseDates(ds string) (start string, end string) {
+	whenParts := strings.Split(ds, "—")
+	return whenParts[0], whenParts[1]
+}
 
+// The calendar URL to the dallasmakerspace.org calendar.
+const calendarURL = "http://calendar.dallasmakerspace.org"
+
+// NewCalendar creates a new calendar object from the calendarURL.
 func NewCalendar() (*Calendar, error) {
 	doc, err := goquery.NewDocument(calendarURL)
 
@@ -59,7 +73,7 @@ func NewCalendar() (*Calendar, error) {
 			case "Where":
 				event.Where = clean(tr.Find("td:nth-child(2)").Text())
 			case "When":
-				event.When = clean(tr.Find("td:nth-child(2)").Text())
+				event.Start, event.End = parseDates(clean(tr.Find("td:nth-child(2)").Text()))
 			case "Details":
 				event.Details = clean(tr.Find("td:nth-child(2)").Text())
 			}
